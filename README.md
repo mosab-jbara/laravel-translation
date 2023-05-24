@@ -163,7 +163,7 @@ class EmployeeController extends Controller
             'en'  => 'position in english',
             'ar'  => 'position in arabic',
         ];
-        $employee->salary = 5000$,
+        $employee->salary = 5000,
  
         $employee->save();
     }
@@ -182,7 +182,7 @@ class EmployeeController extends Controller
         $employee = Employee::create([
             'name'     => 'translation name',
             'position' => 'translation position',
-            'salary'   => 5000$,
+            'salary'   => 5000,
         ]);
     }
 }
@@ -292,7 +292,7 @@ Then the model and his translation returned in this way:
 	"id": 1,
 	"name": "name in english",
 	"position": "position in english",
-	"salary": 5000$
+	"salary": 5000,
 	"translations": {
 		"name": {
 			"ar": "name in arabic",

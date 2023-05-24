@@ -66,6 +66,12 @@ abstract class TranslatableModel extends Model {
                     $this->translation_attributes[$key][$language]=$value;
                 return;
             }
+            else
+            {
+                foreach($languages as $language)
+                    $this->translation_attributes[$key][$language]=null;
+                return;
+            }
         }
         parent::__set($key, $value);
     }
@@ -150,7 +156,7 @@ abstract class TranslatableModel extends Model {
                             'translatable_type' => $model::class,
                             'language'  => $lang,
                             'attribute' => $attribute,
-                            'value'     => $value,
+                            'value'     => $value??"",
                             'created_at' => \Carbon\Carbon::now(),
                             'updated_at' => \Carbon\Carbon::now(),
                         ];
@@ -164,7 +170,7 @@ abstract class TranslatableModel extends Model {
                             'translatable_type' => $model::class,
                             'language'  => $lang,
                             'attribute' => $attribute,
-                            'value'     => $value,
+                            'value'     => $value??"",
                         ];
                     $model->translation_changes[$attribute] = $translations;
                     $updated = true;
@@ -212,5 +218,25 @@ abstract class TranslatableModel extends Model {
             $this->$key = $value;
 
         return parent::fill($other_attributes);
+    }
+
+    public function discardChanges()
+    {
+        [$this->translation_attributes, $this->translation_changes] = [$this->translation_original, []];
+
+        return parent::discardChanges();
+    }
+
+    public function getDirty()
+    {
+        $dirty = parent::getDirty();
+
+        foreach ($this->translation_attributes as $key => $value) {
+            if ($this->translation_original[$key] != $value) {
+                $dirty[$key] = $value;
+            }
+        }
+
+        return $dirty;
     }
 }
