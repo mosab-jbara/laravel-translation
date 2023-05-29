@@ -227,15 +227,23 @@ abstract class TranslatableModel extends Model {
         return parent::discardChanges();
     }
 
-    public function getDirty()
+    public function getDirtyTranslatable()
     {
-        $dirty = parent::getDirty();
-
+        $dirty = [];
         foreach ($this->translation_attributes as $key => $value) {
-            if ($this->translation_original[$key] != $value) {
+            if ($this->translation_original[$key]??null != $value) {
                 $dirty[$key] = $value;
             }
         }
+        return $dirty;
+    }
+
+    public function getDirty($with_translatable=false)
+    {
+        $dirty = parent::getDirty();
+
+        if($with_translatable)
+            $dirty += self::getDirtyTranslatable();
 
         return $dirty;
     }
