@@ -311,3 +311,28 @@ Accept-Language : en;
 ```
 By default if you don't send the accept-language header it will take English as the default language.
 All This is provided by RequestLanguage middleware.
+
+## Control the Languages
+### Get all available Languages
+In order to ensure compatibility between the backend and the frontend, especially when the frontend works using famous translation libraries such as i18n, you need the language code to be identical to the Language universal code, for that the entered code is controlled according to the Json file.
+Front End can get these languages and display them in a drop down list to ensure compatibility.
+```
+https://www.your-domain.com/languages/available
+```
+
+### CRUD Languages
+1. Get All Languages: Returns the languages within your application
+
+```
+Get: https://www.your-domain.com/languages
+```
+
+2. Add new Language: send 'title' in form-data like you are insert in TranslatableModel
+```
+Post: https://www.your-domain.com/languages
+```
+
+3. Delete Language
+```
+Delete: https://www.your-domain.com/languages/:id
+```
