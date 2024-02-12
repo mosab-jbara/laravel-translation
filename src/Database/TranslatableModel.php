@@ -240,12 +240,23 @@ abstract class TranslatableModel extends Model
         return $dirty;
     }
 
-    // Define the scope for searching translations
-    public function scopeWhereTranslation($query, $attribute, $value)
+    /**
+     * Scope a query to include translations for a given attribute and value in a specific language.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $attribute The attribute to search within translations.
+     * @param mixed $value The value to match within translations.
+     * @param string|null $language The language code to filter translations by.
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeWhereTranslation($query, $attribute, $value, $language = null)
     {
-        return $query->whereHas('translations', function ($translationQuery) use ($attribute, $value) {
-            $translationQuery->where('attribute', $attribute)
-                ->where('value', '=', $value);
+        return $query->whereHas('translations', function ($query) use ($attribute, $value, $language) {
+            $query->where('attribute', $attribute)
+                ->where('value', 'LIKE', '%' . $value . '%');
+            if (!is_null($language)) {
+                $query->where('language', $language);
+            }
         });
     }
 }
