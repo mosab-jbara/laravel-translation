@@ -392,4 +392,27 @@ abstract class TranslatableModel extends Model
             }
         });
     }
+
+    /**
+     * Scope a query to include translations for a given attribute and value in a specific language using OR logic.
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param string $attribute The attribute to search within translations.
+     * @param mixed $value The value to match within translations.
+     * @param string|null $language The language code to filter translations by.
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOrWhereTranslation($query, $attribute, $value, $language = null)
+    {
+        return $query->orWhereHas('translations', function ($query) use ($attribute, $value, $language) {
+            $query->where(function ($q) use ($attribute, $value, $language) {
+                $q->where('attribute', $attribute)
+                    ->where('value', 'LIKE', '%' . $value . '%');
+
+                if (!is_null($language)) {
+                    $q->where('language', $language);
+                }
+            });
+        });
+    }
 }
