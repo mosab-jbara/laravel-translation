@@ -8,13 +8,20 @@ use Mosab\Translation\Models\TranslationsLanguage;
 use Illuminate\Support\Facades\File;
 use Mosab\Translation\Models\Translation;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Cache;
 
 class LanguagesController extends Controller
 {
     public function index()
     {
-        $TranslationsLanguages = TranslationsLanguage::all();
-        return response()->json(['TranslationsLanguages' => $TranslationsLanguages], Response::HTTP_OK);
+        $cacheKey = 'translationsLanguages.all';
+        $ttl = 86400; // Cache time-to-live in seconds, 1 day
+    
+        $translationsLanguages = Cache::remember($cacheKey, $ttl, function () {
+            return TranslationsLanguage::all();
+        });
+    
+        return response()->json(['TranslationsLanguages' => $translationsLanguages], Response::HTTP_OK);
     }
 
     public function store(Request $request)
@@ -23,53 +30,43 @@ class LanguagesController extends Controller
             'title' => 'required|array', translation_rule(),
         ]);
 
-        // Load the JSON file contents
-        $jsonPath = public_path('languageUniversalCode.json');
-        $jsonContents = File::get($jsonPath);
-
-        // Decode the JSON into an array
-        $languageData = json_decode($jsonContents, true);
-
-        // Find the language with the matching title
-        $requestedTitle = $request->title['en'];
-        $language = collect($languageData)->firstWhere('name', $requestedTitle);
+        $languageData = $this->getLanguageData();
+        $language = collect($languageData)->firstWhere('name', $request->title);
 
         if (!$language) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Language not found.',
-            ], 404);
+            abort(404, 'Language not found.');
         }
 
-        $TranslationsLanguage = new TranslationsLanguage;
+        $translationsLanguage = TranslationsLanguage::create([
+            'code' => $language['code'],
+            'title' => $request->title,
+        ]);
 
-        $TranslationsLanguage->code = $language['code'];
-        $TranslationsLanguage->title = $requestedTitle;
-
-        $TranslationsLanguage->save();
-
-
-        return response()->json(['TranslationsLanguage' => $TranslationsLanguage], Response::HTTP_CREATED);
+        return response()->json(['TranslationsLanguage' => $translationsLanguage], Response::HTTP_CREATED);
     }
 
     public function destroy(TranslationsLanguage $language)
     {
-        $translations = Translation::where('language', $language->code)->get();
-        foreach ($translations as $key => $translation) {
-            $translation->delete();
-        }
+        Translation::where('language', $language->code)->delete();
         $language->delete();
 
-        return Response::HTTP_NO_CONTENT;
+        return response(null, Response::HTTP_NO_CONTENT);
     }
 
     public function show()
     {
-        $jsonFile = File::get(public_path('languageUniversalCode.json'));
-        $data = json_decode($jsonFile, true);
+        $languageData = $this->getLanguageData();
+        $keyNames = array_column($languageData, 'name');
 
-        $keyNames = array_column($data, 'name');
-
-        return response()->json(['avaliableLanguages' => $keyNames], Response::HTTP_OK);
+        return response()->json(['availableLanguages' => $keyNames], Response::HTTP_OK);
     }
+
+    private function getLanguageData()
+    {
+        return Cache::remember('languageData', 60 * 60*60, function () {
+            $jsonFile = File::get(public_path('languageUniversalCode.json'));
+            return json_decode($jsonFile, true);
+        });
+    }
+
 }
