@@ -1,12 +1,11 @@
-
 # Translation Package
 
 This package allows you to manage models and his translations in database.
 
-
 ## Installation
+
 1. This package can be used with Laravel 8.0 or higher.
- you can install the package via composer:
+   you can install the package via composer:
 
 ```php
 composer require mosab/translation
@@ -28,38 +27,48 @@ php artisan vendor:publish --provider="Mosab\Translation\TranslationServiceProvi
 ```
 
 - if you want to publish only migrations files:
+
 ```php
 php artisan vendor:publish --provider="Mosab\Translation\TranslationServiceProvider" --tag=migrations
 ```
 
 - if you want to publish only seeders files:
+
 ```php
 php artisan vendor:publish --provider="Mosab\Translation\TranslationServiceProvider" --tag=seeders
 ```
+
 4. Run the migrations:
-  After the migration have been published, you can create the tables for this package by running:
+   After the migration have been published, you can create the tables for this package by running:
+
 ```php
 php artisan migrate
-``` 
+```
+
 5. Run the seeder
 
 ```php
-php artisan db:seeder --class=TranslationsLanguageSeeder 
+php artisan db:seeder --class=TranslationsLanguageSeeder
 ```
 
 Automatically after executing seeding, your project will support Arabic and English languages.
 But, if you want to add a new language, you have to add this language in the following way:
+
 - add code for new language in TranslationsLanguageSeeder at $all_languages variable, like this:
+
 ```php
 RequestLanguage::$all_languages = ['en', 'ar', 'code for new language'];
 ```
+
 - then you can add new language
+
 ```php
 TranslationsLanguage::create([
     'code'  => 'code for new language',
     'title' => 'new language name',
 ]);
 ```
+
 <span style="color:green"><b>Note:</b></span>.
 you can manage Languages or modify it by dealing with translations_languages table directly.
 
@@ -75,7 +84,9 @@ protected $middlewareGroups = [
 ```
 
 ## Usage Instructions
-### Set  Up Translatable Model Class
+
+### Set Up Translatable Model Class
+
 1. After determine the tables that you want to translate some column of them, modify the model for this table by inheriting TranslatableModel, like this:
 
 ```php
@@ -88,8 +99,8 @@ class Test extends TranslatableModel
 ```
 
 2. Add new protected variable called translatable, and the type of this variable must be array.
-You should add the columns you want to translate from this model in the translatable variable.
- for example:
+   You should add the columns you want to translate from this model in the translatable variable.
+   for example:
 
 ```php
 class Employee extends TranslatableModel
@@ -105,6 +116,7 @@ class Employee extends TranslatableModel
     ];
 }
 ```
+
 <span style="color:green"><b>Note:</b></span>.
 you should not add the columns you want to translate in migration files.
 just add the another columns that have no translation.
@@ -137,14 +149,18 @@ return new class extends Migration
     }
 }
 ```
+
 As the translatable columns are automatically stored at the translations table in database.
 
 ### Inserting Translatable Models
+
 When you need to insert new records, you should instantiate a new model instance and set attributes on the model. Then, call the save method on the model instance.
 Note that When you adding translation for a specific column, you must assign the value as:
+
 - string value, then all translation values take the same value.
 - or as array key => value.
-for example:
+  for example:
+
 ```php
 class EmployeeController extends Controller
 {
@@ -152,9 +168,9 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         // Validate the request...
- 
+
         $employee = new Employee();
- 
+
         $employee->name = [
             'en'  => 'name in english',
             'ar'  => 'name in arabic',
@@ -164,11 +180,12 @@ class EmployeeController extends Controller
             'ar'  => 'position in arabic',
         ];
         $employee->salary = 5000,
- 
+
         $employee->save();
     }
 }
 ```
+
 You may use the create method to "save" a new model, like this:
 
 ```php
@@ -178,7 +195,7 @@ class EmployeeController extends Controller
     public function store(Request $request)
     {
         // Validate the request...
- 
+
         $employee = Employee::create([
             'name'     => 'translation name',
             'position' => 'translation position',
@@ -187,6 +204,7 @@ class EmployeeController extends Controller
     }
 }
 ```
+
 If you want to add validate for request you can use function called translation_rule(), this method forces the user to enter the value with its translations in all languages ​​supported in the system.
 for example:
 
@@ -200,22 +218,25 @@ class EmployeeController extends Controller
             'name'      => ['required', 'array', translation_rule()],
             'position'  => ['required', 'array', translation_rule()],
             'salary'    => ['required']
-        ]); 
+        ]);
 
         $employee = new Employee();
- 
+
         $employee->name = $request->name,
         $employee->position = $request->position,
         $employee->salary = $request->salary,
- 
+
         $employee->save();
     }
 }
 ```
+
 ### Updating Translatable Models
+
 The save method may also be used to update models that already exist in the database. To update a model, you should retrieve it and set any attributes you wish to update. Then, you should call the model's save method.
 When you update any translatable column, the old translation value delete from translations table and insert the new translation value in this table.
 for example:
+
 ```php
 class EmployeeController extends Controller
 {
@@ -234,12 +255,14 @@ class EmployeeController extends Controller
             'en'  => 'position in english',
             'ar'  => 'position in arabic',
         ];
- 
+
         $employee->save();
     }
 }
 ```
+
 You may use the update method to "update" a model, like this:
+
 ```php
 class EmployeeController extends Controller
 {
@@ -251,15 +274,18 @@ class EmployeeController extends Controller
        $employee = Employee::find($id);
 
        $employee->update = [
-            'name'     => ['en'=> 'name in english','ar'=> 'name in arabic'], 
+            'name'     => ['en'=> 'name in english','ar'=> 'name in arabic'],
             'position' => ['en'=> 'position in english','ar'=> 'position in arabic'],
        ];
     }
 }
 ```
+
 ### Deleting Translatable Models
+
 To delete a model, you may call the delete method on the model instance:
 When you delete a model, his translations are automatically deleted from the translation table.
+
 ```php
 class EmployeeController extends Controller
 {
@@ -272,8 +298,11 @@ class EmployeeController extends Controller
     }
 }
 ```
+
 ### Retrieving Translatable Models
+
 When you need to retrieve a model, you can do it by this way:
+
 ```php
 class EmployeeController extends Controller
 {
@@ -281,12 +310,14 @@ class EmployeeController extends Controller
     public function show($id)
     {
         $employee = Employee::find($id);
-        
+
         return $employee;
     }
 }
 ```
+
 Then the model and his translation returned in this way:
+
 ```
 {
 	"id": 1,
@@ -305,9 +336,60 @@ Then the model and his translation returned in this way:
 	}
 }
 ```
-In this package you can specify which language you want to return the  translatable columns in, by sending the language code you want in the headers, like this:
+
+In this package you can specify which language you want to return the translatable columns in, by sending the language code you want in the headers, like this:
+
 ```php
 Accept-Language : en;
 ```
+
 By default if you don't send the accept-language header it will take English as the default language.
 All This is provided by RequestLanguage middleware.
+
+## Control the Languages
+
+### Get all available Languages
+
+In order to ensure compatibility between the backend and the frontend, especially when the frontend works using famous translation libraries such as i18n, you need the language code to be identical to the Language universal code, for that the entered code is controlled according to the Json file.
+Front End can get these languages and display them in a drop down list to ensure compatibility.
+
+```
+https://www.your-domain.com/languages/available
+```
+
+### CRUD Languages
+
+1. Get All Languages: Returns the languages within your application
+
+```
+Get: https://www.your-domain.com/languages
+```
+
+2. Add new Language: send 'title' in form-data like you are insert in TranslatableModel
+
+```
+Post: https://www.your-domain.com/languages
+```
+
+3. Delete Language
+
+```
+Delete: https://www.your-domain.com/languages/:id
+```
+
+### Search within translated value
+
+You can do this by using the following Scope:
+
+```
+WhereTranslation
+```
+
+As in the following example:
+
+```
+$searchValue = 'your_search_value';
+
+$products = Product::whereTranslation('name', $searchValue)->get();
+
+```
